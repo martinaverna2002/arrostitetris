@@ -254,6 +254,7 @@ const PIECE_LAND_Y = {
   't_pezzo_7': 292,
 };
 const FALL_SPEED = 2;
+const SLIDE_SPEED = 4;
 const GAME_AREA_LEFT = 51;
 const GAME_AREA_RIGHT = 344;
 const STECCHINO_CENTER_X = 197.5;
@@ -301,36 +302,52 @@ function spawnNextPiece() {
 fillQueue();
 spawnNextPiece();
 
+let slideTimer = 0;
+
 function update() {
   if (!isRunning) return;
-  if (!currentPiece) { render(); requestAnimationFrame(update); return; }
 
-  currentPiece.y += FALL_SPEED;
+  if (currentPiece) {
+    currentPiece.y += FALL_SPEED;
 
-  const collisionX = Math.abs(currentPiece.x - stecchinoX) < 28;
-  const collisionY = Math.abs(currentPiece.y - 210) < 24;
+    const collisionX = Math.abs(currentPiece.x - stecchinoX) < 28;
+    const collisionY = Math.abs(currentPiece.y - 210) < 24;
 
-  if (collisionX && collisionY) {
-    currentPiece.y = currentPiece.targetY;
-    currentPiece.x = stecchinoX;
-    pieces.push({ ...currentPiece, landed: true });
+    if (collisionX && collisionY) {
+      const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+      use.setAttribute('href', '#' + currentPiece.type);
+      use.setAttribute('transform', 'translate(' + STECCHINO_CENTER_X + ', ' + currentPiece.y + ')');
+      landedContainer.appendChild(use);
+      currentPiece.sliding = true;
+      currentPiece.use = use;
+      pieces.push(currentPiece);
+      currentPiece = null;
+    }
 
-    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-    use.setAttribute('href', '#' + currentPiece.type);
-    use.setAttribute('transform', 'translate(' + STECCHINO_CENTER_X + ', ' + currentPiece.targetY + ')');
-    landedContainer.appendChild(use);
-
-    currentPiece = null;
-
-    setTimeout(spawnNextPiece, 500);
-    render();
-    requestAnimationFrame(update);
-    return;
+    if (currentPiece && currentPiece.y > 570) {
+      currentPiece.y = SPAWN_Y;
+      currentPiece.x = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
+    }
   }
 
-  if (currentPiece.y > 570) {
-    currentPiece.y = SPAWN_Y;
-    currentPiece.x = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
+  for (const p of pieces) {
+    if (p.sliding) {
+      p.y += SLIDE_SPEED;
+      if (p.y >= p.targetY) {
+        p.y = p.targetY;
+        p.sliding = false;
+      }
+    }
+  }
+
+  if (!currentPiece && pieces.length > 0 && !pieces[pieces.length - 1].sliding) {
+    slideTimer++;
+    if (slideTimer > 30) {
+      spawnNextPiece();
+      slideTimer = 0;
+    }
+  } else {
+    slideTimer = 0;
   }
 
   render();
@@ -340,6 +357,12 @@ function update() {
 function render() {
   const currentOffset = stecchinoX - STECCHINO_CENTER_X;
   movingGroup.setAttribute('transform', 'translate(' + currentOffset + ', 0)');
+
+  for (const p of pieces) {
+    if (p.sliding && p.use) {
+      p.use.setAttribute('transform', 'translate(' + STECCHINO_CENTER_X + ', ' + p.y + ')');
+    }
+  }
 
   if (currentPiece) {
     if (!fallingUse) {
