@@ -319,8 +319,8 @@ function update() {
     landedCount++;
 
     const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-    use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + currentPiece.type);
-    use.setAttribute('transform', 'translate(' + stecchinoX + ', ' + targetY + ')');
+    use.setAttribute('href', '#' + currentPiece.type);
+    use.setAttribute('transform', 'translate(' + STECCHINO_CENTER_X + ', ' + targetY + ')');
     landedContainer.appendChild(use);
 
     currentPiece = null;
@@ -340,17 +340,17 @@ function render() {
   for (let i = 0; i < uses.length; i++) {
     const piece = pieces[i];
     if (piece) {
-      uses[i].setAttribute('transform', 'translate(' + stecchinoX + ', ' + piece.y + ')');
+      uses[i].setAttribute('transform', 'translate(' + STECCHINO_CENTER_X + ', ' + piece.y + ')');
     }
   }
 
   if (currentPiece) {
     if (!fallingUse) {
       fallingUse = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-      fallingUse.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + currentPiece.type);
+      fallingUse.setAttribute('href', '#' + currentPiece.type);
       svg.appendChild(fallingUse);
     } else {
-      fallingUse.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + currentPiece.type);
+      fallingUse.setAttribute('href', '#' + currentPiece.type);
     }
     fallingUse.setAttribute('transform', 'translate(' + currentPiece.x + ', ' + currentPiece.y + ')');
   } else if (fallingUse) {
