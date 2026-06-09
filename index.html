@@ -314,12 +314,14 @@ function update() {
     const collisionY = Math.abs(currentPiece.y - 210) < 24;
 
     if (collisionX && collisionY) {
+      const offset = currentPiece.x - stecchinoX;
       const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
       use.setAttribute('href', '#' + currentPiece.type);
-      use.setAttribute('transform', 'translate(' + STECCHINO_CENTER_X + ', ' + currentPiece.y + ')');
+      use.setAttribute('transform', 'translate(' + (STECCHINO_CENTER_X + offset) + ', ' + currentPiece.y + ')');
       landedContainer.appendChild(use);
       currentPiece.sliding = true;
       currentPiece.use = use;
+      currentPiece.offset = offset;
       pieces.push(currentPiece);
       currentPiece = null;
     }
@@ -360,7 +362,7 @@ function render() {
 
   for (const p of pieces) {
     if (p.sliding && p.use) {
-      p.use.setAttribute('transform', 'translate(' + STECCHINO_CENTER_X + ', ' + p.y + ')');
+      p.use.setAttribute('transform', 'translate(' + (STECCHINO_CENTER_X + (p.offset || 0)) + ', ' + p.y + ')');
     }
   }
 
