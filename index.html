@@ -17,15 +17,34 @@
     width: 595.28px;
     height: 841.89px;
     max-height: 98vh;
-    cursor: none;
   }
+  #game-area { cursor: none; }
   #start-btn { cursor: pointer; }
   #countdown {
     font-family: Minecraft, Minecraft;
-    font-size: 72px;
+    font-size: 120px;
+    fill: #1d1d1b;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  #pause-icon { visibility: hidden; }
+  #pause-icon rect {
+    fill: #1d1d1b;
+    rx: 3;
+  }
+  #win-text {
+    font-family: Minecraft, Minecraft;
+    font-size: 48px;
     fill: #e30613;
     text-anchor: middle;
     dominant-baseline: central;
+    visibility: hidden;
+  }
+  @keyframes confetti-fall {
+    to { transform: translateY(580px); }
+  }
+  .confetti {
+    animation: confetti-fall 3s ease-in both;
   }
 </style>
 </head>
@@ -177,7 +196,6 @@
     <text class="cls-8" transform="translate(532.55 537.6)"><tspan x="0" y="0">1</tspan></text>
   </g>
   <g id="game-area" clip-path="url(#white-rect-clip)">
-    <text id="countdown" x="197.5" y="311" visibility="hidden">3</text>
     <g id="moving-group">
       <g id="stecchino">
         <path class="cls-6" d="M197.62,559c-1.35-14.51-2.3-29.02-3.26-43.53.04-27.42.03-102.17.03-130.6,0-28.66,0-102.84,0-130.6.98-14.51,1.93-29.02,3.23-43.53,1.29,14.51,2.25,29.02,3.23,43.53,0,27.42,0,102.17,0,130.6,0,28.66,0,102.84.03,130.6-.96,14.51-1.91,29.02-3.26,43.53h0Z"/>
@@ -185,6 +203,13 @@
       </g>
       <g id="landed-pieces"></g>
     </g>
+    <text id="countdown" x="197.5" y="311" visibility="hidden">3</text>
+    <g id="pause-icon">
+      <rect x="175" y="260" width="15" height="102"/>
+      <rect x="205" y="260" width="15" height="102"/>
+    </g>
+    <text id="win-text" x="197.5" y="311">YOU WIN</text>
+    <g id="confetti-container"></g>
   </g>
   <g id="cuore_3">
     <polygon class="cls-7" points="408.97 56.85 408.97 70.65 405.52 70.65 405.52 74.1 402.07 74.1 402.07 77.55 398.63 77.55 398.63 80.99 395.18 80.99 395.18 84.44 391.72 84.44 391.72 87.89 384.83 87.89 384.83 84.44 381.38 84.44 381.38 80.99 377.93 80.99 377.93 77.55 374.48 77.55 374.48 74.1 371.03 74.1 371.03 70.65 367.58 70.65 367.58 56.85 371.03 56.85 371.03 53.4 383.1 53.4 383.1 56.85 386.55 56.85 386.55 60.3 390 60.3 390 56.85 393.45 56.85 393.45 53.4 405.52 53.4 405.52 56.85 408.97 56.85"/>
@@ -275,6 +300,9 @@ const GAME_AREA_TOP = 49.95;
 const GAME_AREA_BOTTOM = 573.66;
 const STECCHINO_CENTER_X = 197.5;
 const SPAWN_Y = GAME_AREA_TOP;
+const CONFETTI_COLORS = ['#e30613', '#36a9e1', '#f9b233', '#e52b3a', '#1d71b8', '#683c11', '#7d4e24'];
+
+const STATE = { IDLE: 0, COUNTDOWN: 1, PLAYING: 2, PAUSED: 3, WIN: 4 };
 
 let stecchinoX = STECCHINO_CENTER_X;
 let pieces = [];
@@ -285,6 +313,8 @@ let isRunning = false;
 let gameActive = false;
 let fallingUse = null;
 let countdownInterval = null;
+let startTimeout = null;
+let state = STATE.IDLE;
 
 const svg = document.querySelector('#Poster');
 const gameArea = document.getElementById('game-area');
@@ -292,6 +322,9 @@ const movingGroup = document.getElementById('moving-group');
 const landedContainer = document.getElementById('landed-pieces');
 const startBtn = document.getElementById('start-btn');
 const countdownEl = document.getElementById('countdown');
+const pauseIcon = document.getElementById('pause-icon');
+const winText = document.getElementById('win-text');
+const confettiContainer = document.getElementById('confetti-container');
 
 function renderSkewer() {
   const currentOffset = stecchinoX - STECCHINO_CENTER_X;
@@ -330,6 +363,7 @@ function resetGame() {
   isRunning = false;
   gameActive = false;
   clearInterval(countdownInterval);
+  clearTimeout(startTimeout);
   pieces = [];
   currentPiece = null;
   if (fallingUse) { fallingUse.remove(); fallingUse = null; }
@@ -338,26 +372,77 @@ function resetGame() {
   stecchinoX = STECCHINO_CENTER_X;
   renderSkewer();
   countdownEl.setAttribute('visibility', 'hidden');
+  pauseIcon.setAttribute('visibility', 'hidden');
+  winText.setAttribute('visibility', 'hidden');
+  confettiContainer.innerHTML = '';
 }
 
 function startCountdown() {
-  resetGame();
-  let count = 3;
-  countdownEl.textContent = count;
+  countdownEl.textContent = 3;
   countdownEl.setAttribute('visibility', 'visible');
+  let count = 3;
   countdownInterval = setInterval(() => {
     count--;
     if (count === 0) {
-      clearInterval(countdownInterval);
       countdownEl.setAttribute('visibility', 'hidden');
-      startGame();
+      clearInterval(countdownInterval);
+      startTimeout = setTimeout(startGame, 2000);
     } else {
       countdownEl.textContent = count;
     }
   }, 1000);
 }
 
+function cancelCountdown() {
+  clearInterval(countdownInterval);
+  clearTimeout(startTimeout);
+  countdownEl.setAttribute('visibility', 'hidden');
+}
+
+function pauseGame() {
+  state = STATE.PAUSED;
+  isRunning = false;
+  pauseIcon.setAttribute('visibility', 'visible');
+}
+
+function resumeGame() {
+  state = STATE.PLAYING;
+  isRunning = true;
+  pauseIcon.setAttribute('visibility', 'hidden');
+  update();
+}
+
+function resetToIdle() {
+  resetGame();
+  state = STATE.IDLE;
+}
+
+function winGame() {
+  state = STATE.WIN;
+  isRunning = false;
+  winText.setAttribute('visibility', 'visible');
+  spawnConfetti();
+  startTimeout = setTimeout(resetToIdle, 5000);
+}
+
+function spawnConfetti() {
+  for (let i = 0; i < 8; i++) {
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', 51 + Math.random() * 243);
+    rect.setAttribute('y', -20 + Math.random() * -50);
+    rect.setAttribute('width', 4 + Math.random() * 10);
+    rect.setAttribute('height', 3 + Math.random() * 8);
+    rect.setAttribute('fill', CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]);
+    rect.setAttribute('rx', 1);
+    rect.classList.add('confetti');
+    rect.style.animationDelay = (Math.random() * 0.5) + 's';
+    rect.style.animationDuration = (2 + Math.random() * 2) + 's';
+    confettiContainer.appendChild(rect);
+  }
+}
+
 function startGame() {
+  state = STATE.PLAYING;
   gameActive = true;
   isRunning = true;
   fillQueue();
@@ -365,7 +450,27 @@ function startGame() {
   update();
 }
 
-startBtn.addEventListener('click', startCountdown);
+startBtn.addEventListener('click', () => {
+  switch (state) {
+    case STATE.IDLE:
+      state = STATE.COUNTDOWN;
+      startCountdown();
+      break;
+    case STATE.COUNTDOWN:
+      cancelCountdown();
+      resetToIdle();
+      break;
+    case STATE.PLAYING:
+      pauseGame();
+      break;
+    case STATE.PAUSED:
+      resumeGame();
+      break;
+    case STATE.WIN:
+      resetToIdle();
+      break;
+  }
+});
 
 function update() {
   if (!isRunning) return;
@@ -406,7 +511,9 @@ function update() {
     }
   }
 
-  if (!currentPiece && pieces.length > 0 && !pieces[pieces.length - 1].sliding) {
+  if (pieces.length === 7 && !currentPiece && pieces.every(p => !p.sliding)) {
+    winGame();
+  } else if (!currentPiece && pieces.length > 0 && !pieces[pieces.length - 1].sliding) {
     spawnNextPiece();
   }
 
