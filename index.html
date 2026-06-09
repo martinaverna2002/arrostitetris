@@ -308,7 +308,7 @@ function update() {
   currentPiece.y += FALL_SPEED;
 
   const collisionX = Math.abs(currentPiece.x - stecchinoX) < 28;
-  const collisionY = currentPiece.y >= 200 && currentPiece.y <= 570;
+  const collisionY = Math.abs(currentPiece.y - 210) < 24;
 
   if (collisionX && collisionY) {
     currentPiece.y = currentPiece.targetY;
