@@ -301,6 +301,13 @@ const GAME_AREA_BOTTOM = 573.66;
 const STECCHINO_CENTER_X = 197.5;
 const SPAWN_Y = GAME_AREA_TOP;
 const CONFETTI_COLORS = ['#e30613', '#36a9e1', '#f9b233', '#e52b3a', '#1d71b8', '#683c11', '#7d4e24'];
+const ROTTEN_CHANCE = 0.25;
+const MOLD_SPOTS = [
+  { dx: -12, dy: -18, r: 4 }, { dx: 8, dy: -12, r: 3 },
+  { dx: -8, dy: 12, r: 5 },  { dx: 18, dy: 2, r: 3 },
+  { dx: -20, dy: 2, r: 4 },  { dx: 4, dy: -24, r: 3 },
+  { dx: -4, dy: 20, r: 3 },  { dx: 16, dy: -6, r: 4 },
+];
 
 const STATE = { IDLE: 0, COUNTDOWN: 1, PLAYING: 2, PAUSED: 3, WIN: 4 };
 
@@ -312,9 +319,11 @@ let pieceQueue = [];
 let isRunning = false;
 let gameActive = false;
 let fallingUse = null;
+let fallingMold = [];
 let countdownInterval = null;
 let startTimeout = null;
 let state = STATE.IDLE;
+let lives = 3;
 
 const svg = document.querySelector('#Poster');
 const gameArea = document.getElementById('game-area');
@@ -325,6 +334,11 @@ const countdownEl = document.getElementById('countdown');
 const pauseIcon = document.getElementById('pause-icon');
 const winText = document.getElementById('win-text');
 const confettiContainer = document.getElementById('confetti-container');
+const heartGroups = [
+  document.getElementById('cuore_1'),
+  document.getElementById('cuore_2'),
+  document.getElementById('cuore_3'),
+];
 
 function renderSkewer() {
   const currentOffset = stecchinoX - STECCHINO_CENTER_X;
@@ -356,6 +370,8 @@ function spawnNextPiece() {
     x: spawnX,
     y: SPAWN_Y,
     targetY: PIECE_LAND_Y[type],
+    isRotten: Math.random() < ROTTEN_CHANCE,
+    moldCircles: null,
   };
 }
 
@@ -367,6 +383,8 @@ function resetGame() {
   pieces = [];
   currentPiece = null;
   if (fallingUse) { fallingUse.remove(); fallingUse = null; }
+  fallingMold.forEach(c => c.remove());
+  fallingMold = [];
   pieceQueue = [];
   landedContainer.innerHTML = '';
   stecchinoX = STECCHINO_CENTER_X;
@@ -414,6 +432,7 @@ function resumeGame() {
 
 function resetToIdle() {
   resetGame();
+  resetLives();
   state = STATE.IDLE;
 }
 
@@ -439,6 +458,39 @@ function spawnConfetti() {
     rect.style.animationDuration = (2 + Math.random() * 2) + 's';
     confettiContainer.appendChild(rect);
   }
+}
+
+function createMold(x, y, parent, pieceObj) {
+  pieceObj.moldEls = [];
+  for (const spot of MOLD_SPOTS) {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', x + spot.dx);
+    c.setAttribute('cy', y + spot.dy);
+    c.setAttribute('r', spot.r);
+    c.setAttribute('fill', '#4a7c2e');
+    c.setAttribute('opacity', '0.85');
+    parent.appendChild(c);
+    pieceObj.moldEls.push(c);
+  }
+}
+
+function loseLife() {
+  if (lives <= 0) return;
+  lives--;
+  const idx = lives; // 0, 1, 2
+  if (heartGroups[idx]) heartGroups[idx].style.display = 'none';
+  if (lives === 0) {
+    state = STATE.WIN;
+    isRunning = false;
+    winText.textContent = 'GAME OVER';
+    winText.setAttribute('visibility', 'visible');
+    startTimeout = setTimeout(resetToIdle, 3000);
+  }
+}
+
+function resetLives() {
+  lives = 3;
+  heartGroups.forEach(g => { if (g) g.style.display = ''; });
 }
 
 function startGame() {
@@ -482,17 +534,27 @@ function update() {
     const collisionY = Math.abs(currentPiece.y - 210) < 24;
 
     if (collisionX && collisionY) {
-      const offset = currentPiece.x - stecchinoX;
-      const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-      use.setAttribute('href', '#' + currentPiece.type);
-      use.setAttribute('transform', 'translate(' + (STECCHINO_CENTER_X + offset) + ', ' + currentPiece.y + ')');
-      landedContainer.appendChild(use);
-      currentPiece.sliding = true;
-      currentPiece.use = use;
-      currentPiece.offset = offset;
-      pieces.push(currentPiece);
-      currentPiece = null;
-      if (pieceQueue.length > 0) spawnNextPiece();
+      if (currentPiece.isRotten) {
+        loseLife();
+        if (fallingUse) { fallingUse.remove(); fallingUse = null; }
+        fallingMold.forEach(c => c.remove());
+        fallingMold = [];
+        currentPiece = null;
+        if (state !== STATE.WIN && pieceQueue.length > 0) spawnNextPiece();
+      } else {
+        const offset = currentPiece.x - stecchinoX;
+        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        use.setAttribute('href', '#' + currentPiece.type);
+        use.setAttribute('transform', 'translate(' + (STECCHINO_CENTER_X + offset) + ', ' + currentPiece.y + ')');
+        landedContainer.appendChild(use);
+        if (currentPiece.isRotten) createMold(STECCHINO_CENTER_X + offset, currentPiece.y, landedContainer, currentPiece);
+        currentPiece.sliding = true;
+        currentPiece.use = use;
+        currentPiece.offset = offset;
+        pieces.push(currentPiece);
+        currentPiece = null;
+        if (pieceQueue.length > 0) spawnNextPiece();
+      }
     }
 
     if (currentPiece && currentPiece.y > GAME_AREA_BOTTOM) {
@@ -529,6 +591,11 @@ function render() {
     if (p.sliding && p.use) {
       p.use.setAttribute('transform', 'translate(' + (STECCHINO_CENTER_X + (p.offset || 0)) + ', ' + p.y + ')');
     }
+    if (p.sliding && p.isRotten && p.moldEls) {
+      p.moldEls.forEach((el, i) => {
+        el.setAttribute('cy', p.y + MOLD_SPOTS[i].dy);
+      });
+    }
   }
 
   if (currentPiece) {
@@ -536,12 +603,30 @@ function render() {
       fallingUse = document.createElementNS('http://www.w3.org/2000/svg', 'use');
       fallingUse.setAttribute('href', '#' + currentPiece.type);
       gameArea.appendChild(fallingUse);
+      if (currentPiece.isRotten) {
+        for (const spot of MOLD_SPOTS) {
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('cx', currentPiece.x + spot.dx);
+          c.setAttribute('cy', currentPiece.y + spot.dy);
+          c.setAttribute('r', spot.r);
+          c.setAttribute('fill', '#4a7c2e');
+          c.setAttribute('opacity', '0.85');
+          gameArea.appendChild(c);
+          fallingMold.push(c);
+        }
+      }
     } else {
       fallingUse.setAttribute('href', '#' + currentPiece.type);
+      fallingMold.forEach((c, i) => {
+        c.setAttribute('cx', currentPiece.x + MOLD_SPOTS[i].dx);
+        c.setAttribute('cy', currentPiece.y + MOLD_SPOTS[i].dy);
+      });
     }
     fallingUse.setAttribute('transform', 'translate(' + currentPiece.x + ', ' + currentPiece.y + ')');
   } else if (fallingUse) {
     fallingUse.remove();
+    fallingMold.forEach(c => c.remove());
+    fallingMold = [];
     fallingUse = null;
   }
 }
