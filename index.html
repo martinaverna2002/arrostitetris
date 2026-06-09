@@ -243,7 +243,128 @@
   </g>
 </svg>
 <script>
-// JS will go here
+const PIECE_TYPES = ['t_pezzo_1', 't_pezzo_2', 't_pezzo_3', 't_pezzo_4', 't_pezzo_5', 't_pezzo_6', 't_pezzo_7'];
+const PIECE_HEIGHT = 38;
+const BASE_LAND_Y = 530;
+const FALL_SPEED = 2;
+const ATTRACTION_FORCE = 0.05;
+const GAME_AREA_LEFT = 51;
+const GAME_AREA_RIGHT = 344;
+const STECCHINO_CENTER_X = 197.5;
+const SPAWN_Y = -100;
+
+let stecchinoX = STECCHINO_CENTER_X;
+let pieces = [];
+let currentPiece = null;
+let pieceQueue = [];
+let landedCount = 0;
+let isRunning = true;
+let fallingUse = null;
+
+const svg = document.querySelector('#Poster');
+const movingGroup = document.getElementById('moving-group');
+const landedContainer = document.getElementById('landed-pieces');
+
+svg.addEventListener('mousemove', (e) => {
+  const rect = svg.getBoundingClientRect();
+  const scaleX = 595.28 / rect.width;
+  const svgX = (e.clientX - rect.left) * scaleX;
+  stecchinoX = Math.max(GAME_AREA_LEFT + 25, Math.min(GAME_AREA_RIGHT - 25, svgX));
+});
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function fillQueue() {
+  pieceQueue = shuffle([...PIECE_TYPES]);
+}
+
+function spawnNextPiece() {
+  if (pieceQueue.length === 0) {
+    fillQueue();
+    landedCount = 0;
+  }
+  const type = pieceQueue.pop();
+  const spawnX = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
+  currentPiece = {
+    type: type,
+    x: spawnX,
+    y: SPAWN_Y,
+    targetSlot: landedCount
+  };
+}
+
+fillQueue();
+spawnNextPiece();
+
+function update() {
+  if (!isRunning) return;
+  if (!currentPiece) { requestAnimationFrame(update); return; }
+
+  currentPiece.y += FALL_SPEED;
+
+  const dx = stecchinoX - currentPiece.x;
+  currentPiece.x += dx * ATTRACTION_FORCE;
+
+  const targetY = BASE_LAND_Y - currentPiece.targetSlot * PIECE_HEIGHT;
+  if (currentPiece.y >= targetY) {
+    currentPiece.y = targetY;
+    currentPiece.x = stecchinoX;
+    pieces.push({ ...currentPiece, landed: true });
+    landedCount++;
+
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + currentPiece.type);
+    use.setAttribute('transform', 'translate(' + stecchinoX + ', ' + targetY + ')');
+    landedContainer.appendChild(use);
+
+    currentPiece = null;
+
+    setTimeout(spawnNextPiece, 500);
+  }
+
+  render();
+  requestAnimationFrame(update);
+}
+
+function render() {
+  const currentOffset = stecchinoX - STECCHINO_CENTER_X;
+  movingGroup.setAttribute('transform', 'translate(' + currentOffset + ', 0)');
+
+  const uses = landedContainer.querySelectorAll('use');
+  for (let i = 0; i < uses.length; i++) {
+    const piece = pieces[i];
+    if (piece) {
+      uses[i].setAttribute('transform', 'translate(' + stecchinoX + ', ' + piece.y + ')');
+    }
+  }
+
+  if (currentPiece) {
+    if (!fallingUse) {
+      fallingUse = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+      fallingUse.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + currentPiece.type);
+      svg.appendChild(fallingUse);
+    } else {
+      fallingUse.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + currentPiece.type);
+    }
+    fallingUse.setAttribute('transform', 'translate(' + currentPiece.x + ', ' + currentPiece.y + ')');
+  } else if (fallingUse) {
+    fallingUse.remove();
+    fallingUse = null;
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  isRunning = !document.hidden;
+  if (isRunning) update();
+});
+
+update();
 </script>
 </body>
 </html>
