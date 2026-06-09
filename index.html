@@ -142,6 +142,9 @@
         <polygon class="cls-12" points="222.18 527.53 222.18 529.38 222.18 528.12 222.18 529.97 222.18 531.82 222.18 533.66 222.18 535.51 222.18 527.53 222.18 529.38 222.18 531.23 222.18 533.07 222.18 526.4 222.18 526.4 222.18 526.4 222.18 525.69 222.18 527.53 222.18 529.38 222.18 531.23 222.18 533.07 222.18 534.92 222.18 536.76 222.18 538.61 222.18 540.46 220.04 540.46 220.04 542.3 217.91 542.3 217.91 544.15 215.77 544.15 213.63 544.15 211.5 544.15 209.36 544.15 207.23 544.15 205.09 544.15 202.96 544.15 200.82 544.15 198.69 544.15 196.55 544.15 194.41 544.15 192.28 544.15 190.14 544.15 188.01 544.15 185.87 544.15 183.74 544.15 181.6 544.15 179.46 544.15 177.33 544.15 177.33 542.3 175.19 542.3 175.19 540.46 173.06 540.46 173.06 538.61 173.06 536.76 173.06 534.92 173.06 533.07 173.06 531.23 173.06 529.38 173.06 527.53 173.06 525.69 173.06 526.22 173.06 525.69 173.06 525.69 173.06 533.07 173.06 531.23 173.06 529.38 173.06 527.53 173.06 535.51 173.06 533.66 173.06 531.82 173.06 529.97 173.06 528.12 173.06 529.38 173.06 527.53 173.06 525.69 175.19 525.69 175.19 523.84 177.33 523.84 177.33 521.99 179.46 521.99 181.6 521.99 183.74 521.99 185.87 521.99 188.01 521.99 190.14 521.99 192.28 521.99 194.41 521.99 196.55 521.99 198.69 521.99 200.82 521.99 202.96 521.99 205.09 521.99 207.23 521.99 209.36 521.99 211.5 521.99 213.63 521.99 215.77 521.99 217.91 521.99 217.91 523.84 220.04 523.84 220.04 525.69 222.18 525.69 222.18 527.53"/>
       </g>
     </g>
+    <clipPath id="white-rect-clip">
+      <rect class="cls-5" x="51.05" y="49.95" width="293.13" height="523.71" rx="5.36" ry="5.36"/>
+    </clipPath>
   </defs>
   <g id="sfondo">
     <rect class="cls-16" width="595.28" height="841.89"/>
@@ -165,12 +168,14 @@
     <text class="cls-8" transform="translate(532.55 573.66)"><tspan x="0" y="0">1</tspan></text>
     <text class="cls-8" transform="translate(532.55 537.6)"><tspan x="0" y="0">1</tspan></text>
   </g>
-  <g id="moving-group">
-    <g id="stecchino">
-      <path class="cls-6" d="M197.62,559c-1.35-14.51-2.3-29.02-3.26-43.53.04-27.42.03-102.17.03-130.6,0-28.66,0-102.84,0-130.6.98-14.51,1.93-29.02,3.23-43.53,1.29,14.51,2.25,29.02,3.23,43.53,0,27.42,0,102.17,0,130.6,0,28.66,0,102.84.03,130.6-.96,14.51-1.91,29.02-3.26,43.53h0Z"/>
-      <polygon class="cls-6" points="194.32 572.66 197.62 210.74 200.91 572.66 194.32 572.66 194.32 572.66"/>
+  <g id="game-area" clip-path="url(#white-rect-clip)">
+    <g id="moving-group">
+      <g id="stecchino">
+        <path class="cls-6" d="M197.62,559c-1.35-14.51-2.3-29.02-3.26-43.53.04-27.42.03-102.17.03-130.6,0-28.66,0-102.84,0-130.6.98-14.51,1.93-29.02,3.23-43.53,1.29,14.51,2.25,29.02,3.23,43.53,0,27.42,0,102.17,0,130.6,0,28.66,0,102.84.03,130.6-.96,14.51-1.91,29.02-3.26,43.53h0Z"/>
+        <polygon class="cls-6" points="194.32 572.66 197.62 210.74 200.91 572.66 194.32 572.66 194.32 572.66"/>
+      </g>
+      <g id="landed-pieces"></g>
     </g>
-    <g id="landed-pieces"></g>
   </g>
   <g id="cuore_3">
     <polygon class="cls-7" points="408.97 56.85 408.97 70.65 405.52 70.65 405.52 74.1 402.07 74.1 402.07 77.55 398.63 77.55 398.63 80.99 395.18 80.99 395.18 84.44 391.72 84.44 391.72 87.89 384.83 87.89 384.83 84.44 381.38 84.44 381.38 80.99 377.93 80.99 377.93 77.55 374.48 77.55 374.48 74.1 371.03 74.1 371.03 70.65 367.58 70.65 367.58 56.85 371.03 56.85 371.03 53.4 383.1 53.4 383.1 56.85 386.55 56.85 386.55 60.3 390 60.3 390 56.85 393.45 56.85 393.45 53.4 405.52 53.4 405.52 56.85 408.97 56.85"/>
@@ -255,10 +260,12 @@ const PIECE_LAND_Y = {
 };
 const FALL_SPEED = 4;
 const SLIDE_SPEED = 3;
-const GAME_AREA_LEFT = 51;
-const GAME_AREA_RIGHT = 344;
+const GAME_AREA_LEFT = 51.05;
+const GAME_AREA_RIGHT = 344.18;
+const GAME_AREA_TOP = 49.95;
+const GAME_AREA_BOTTOM = 573.66;
 const STECCHINO_CENTER_X = 197.5;
-const SPAWN_Y = -100;
+const SPAWN_Y = GAME_AREA_TOP;
 
 let stecchinoX = STECCHINO_CENTER_X;
 let pieces = [];
@@ -269,6 +276,7 @@ let isRunning = true;
 let fallingUse = null;
 
 const svg = document.querySelector('#Poster');
+const gameArea = document.getElementById('game-area');
 const movingGroup = document.getElementById('moving-group');
 const landedContainer = document.getElementById('landed-pieces');
 
@@ -325,7 +333,7 @@ function update() {
       if (pieceQueue.length > 0) spawnNextPiece();
     }
 
-    if (currentPiece && currentPiece.y > 570) {
+    if (currentPiece && currentPiece.y > GAME_AREA_BOTTOM) {
       currentPiece.y = SPAWN_Y;
       currentPiece.x = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
     }
@@ -363,7 +371,7 @@ function render() {
     if (!fallingUse) {
       fallingUse = document.createElementNS('http://www.w3.org/2000/svg', 'use');
       fallingUse.setAttribute('href', '#' + currentPiece.type);
-      svg.appendChild(fallingUse);
+      gameArea.appendChild(fallingUse);
     } else {
       fallingUse.setAttribute('href', '#' + currentPiece.type);
     }
