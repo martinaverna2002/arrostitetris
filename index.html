@@ -344,7 +344,7 @@ function update() {
 
   if (!currentPiece && pieces.length > 0 && !pieces[pieces.length - 1].sliding) {
     slideTimer++;
-    if (slideTimer > 10) {
+    if (slideTimer > 300) {
       spawnNextPiece();
       slideTimer = 0;
     }
