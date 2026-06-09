@@ -322,6 +322,7 @@ function update() {
       currentPiece.offset = offset;
       pieces.push(currentPiece);
       currentPiece = null;
+      if (pieceQueue.length > 0) spawnNextPiece();
     }
 
     if (currentPiece && currentPiece.y > 570) {
