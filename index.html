@@ -244,8 +244,15 @@
 </svg>
 <script>
 const PIECE_TYPES = ['t_pezzo_1', 't_pezzo_2', 't_pezzo_3', 't_pezzo_4', 't_pezzo_5', 't_pezzo_6', 't_pezzo_7'];
-const PIECE_HEIGHT = 38;
-const BASE_LAND_Y = 530;
+const PIECE_LAND_Y = {
+  't_pezzo_1': 533,
+  't_pezzo_2': 495,
+  't_pezzo_3': 444,
+  't_pezzo_4': 406,
+  't_pezzo_5': 368,
+  't_pezzo_6': 330,
+  't_pezzo_7': 292,
+};
 const FALL_SPEED = 2;
 const ATTRACTION_FORCE = 0.05;
 const GAME_AREA_LEFT = 51;
@@ -257,7 +264,7 @@ let stecchinoX = STECCHINO_CENTER_X;
 let pieces = [];
 let currentPiece = null;
 let pieceQueue = [];
-let landedCount = 0;
+
 let isRunning = true;
 let fallingUse = null;
 
@@ -281,7 +288,6 @@ function spawnNextPiece() {
     pieces = [];
     landedContainer.innerHTML = '';
     fillQueue();
-    landedCount = 0;
   }
   const type = pieceQueue.pop();
   const spawnX = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
@@ -289,7 +295,7 @@ function spawnNextPiece() {
     type: type,
     x: spawnX,
     y: SPAWN_Y,
-    targetSlot: landedCount
+    targetY: PIECE_LAND_Y[type],
   };
 }
 
@@ -305,16 +311,14 @@ function update() {
   const dx = stecchinoX - currentPiece.x;
   currentPiece.x += dx * ATTRACTION_FORCE;
 
-  const targetY = BASE_LAND_Y - currentPiece.targetSlot * PIECE_HEIGHT;
-  if (currentPiece.y >= targetY) {
-    currentPiece.y = targetY;
+  if (currentPiece.y >= currentPiece.targetY) {
+    currentPiece.y = currentPiece.targetY;
     currentPiece.x = stecchinoX;
     pieces.push({ ...currentPiece, landed: true });
-    landedCount++;
 
     const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
     use.setAttribute('href', '#' + currentPiece.type);
-    use.setAttribute('transform', 'translate(' + STECCHINO_CENTER_X + ', ' + targetY + ')');
+    use.setAttribute('transform', 'translate(' + STECCHINO_CENTER_X + ', ' + currentPiece.targetY + ')');
     landedContainer.appendChild(use);
 
     currentPiece = null;
