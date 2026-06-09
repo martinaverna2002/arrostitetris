@@ -315,6 +315,7 @@ let fallingUse = null;
 let countdownInterval = null;
 let startTimeout = null;
 let state = STATE.IDLE;
+let spawnDelay = 0;
 
 const svg = document.querySelector('#Poster');
 const gameArea = document.getElementById('game-area');
@@ -325,11 +326,6 @@ const countdownEl = document.getElementById('countdown');
 const pauseIcon = document.getElementById('pause-icon');
 const winText = document.getElementById('win-text');
 const confettiContainer = document.getElementById('confetti-container');
-const heartGroups = [
-  document.getElementById('cuore_1'),
-  document.getElementById('cuore_2'),
-  document.getElementById('cuore_3'),
-];
 
 function renderSkewer() {
   const currentOffset = stecchinoX - STECCHINO_CENTER_X;
@@ -372,6 +368,7 @@ function resetGame() {
   clearTimeout(startTimeout);
   pieces = [];
   currentPiece = null;
+  spawnDelay = 0;
   if (fallingUse) { fallingUse.remove(); fallingUse = null; }
   pieceQueue = [];
   landedContainer.innerHTML = '';
@@ -420,7 +417,6 @@ function resumeGame() {
 
 function resetToIdle() {
   resetGame();
-  resetLives();
   state = STATE.IDLE;
 }
 
@@ -447,24 +443,6 @@ function spawnConfetti() {
     rect.style.animationDuration = (2 + Math.random() * 2) + 's';
     confettiContainer.appendChild(rect);
   }
-}
-
-function loseLife() {
-  if (lives <= 0) return;
-  lives--;
-  if (heartGroups[lives]) heartGroups[lives].style.display = 'none';
-  if (lives === 0) {
-    state = STATE.WIN;
-    isRunning = false;
-    winText.textContent = 'GAME OVER';
-    winText.setAttribute('visibility', 'visible');
-    startTimeout = setTimeout(resetToIdle, 3000);
-  }
-}
-
-function resetLives() {
-  lives = 3;
-  heartGroups.forEach(g => { if (g) g.style.display = ''; });
 }
 
 function startGame() {
@@ -517,7 +495,9 @@ function update() {
       currentPiece.use = use;
       currentPiece.offset = offset;
       pieces.push(currentPiece);
+      playSound();
       currentPiece = null;
+      spawnDelay = 30;
     }
 
     if (currentPiece && currentPiece.y > GAME_AREA_BOTTOM) {
@@ -536,7 +516,9 @@ function update() {
     }
   }
 
-  if (!currentPiece && pieces.length > 0 && !pieces[pieces.length - 1].sliding) {
+  if (spawnDelay > 0) {
+    spawnDelay--;
+  } else if (!currentPiece && (pieces.length === 0 || !pieces[pieces.length - 1].sliding)) {
     spawnNextPiece();
   }
 
@@ -569,29 +551,20 @@ function render() {
   }
 }
 
-function playSound(type) {
+function playSound() {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.connect(gain);
   gain.connect(ctx.destination);
-  
-  if (type === 'pluck') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.15);
-  } else if (type === 'buzz') {
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(150, ctx.currentTime);
-    gain.gain.setValueAtTime(0.2, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.3);
-  }
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(440, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+  gain.gain.setValueAtTime(0.3, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.15);
 }
 
 document.addEventListener('visibilitychange', () => {
