@@ -344,7 +344,7 @@ const STECCHINO_CENTER_X = 197.5;
 const SPAWN_Y = GAME_AREA_TOP;
 const CONFETTI_COLORS = ['#e30613', '#36a9e1', '#f9b233', '#e52b3a', '#1d71b8', '#683c11', '#7d4e24'];
 const RED_CHANCE = 0.25;
-const RED_POSITIONS = [538, 553, 568];
+
 
 const STATE = { IDLE: 0, COUNTDOWN: 1, PLAYING: 2, PAUSED: 3, WIN: 4 };
 
@@ -396,21 +396,23 @@ function fillQueue() {
 
 function spawnNextPiece() {
   if (state !== STATE.PLAYING) return;
+  if (pieceQueue.length === 0) { winGame(); return; }
 
   if (redCaught < 3 && Math.random() < RED_CHANCE) {
+    const nextType = pieceQueue[pieceQueue.length - 1];
+    const num = nextType.split('_')[2];
     const spawnX = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
-    const redIdx = Math.floor(Math.random() * 7) + 1;
-    currentPiece = { type: 't_pezzo_rosso_' + redIdx, x: spawnX, y: SPAWN_Y, isRed: true, targetY: RED_POSITIONS[redCaught] };
+    currentPiece = {
+      type: 't_pezzo_rosso_' + num,
+      x: spawnX,
+      y: SPAWN_Y,
+      isRed: true,
+      targetY: PIECE_LAND_Y[nextType],
+      replacesType: nextType,
+    };
     return;
   }
 
-  if (pieceQueue.length === 0) {
-    const normalLand = pieces.filter(p => !p.isRed).length;
-    if (normalLand >= 7) { winGame(); return; }
-    pieces = [];
-    landedContainer.innerHTML = '';
-    fillQueue();
-  }
   const type = pieceQueue.pop();
   const spawnX = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
   currentPiece = {
@@ -566,7 +568,14 @@ function update() {
     const collisionY = Math.abs(currentPiece.y - 210) < 24;
 
     if (collisionX && collisionY) {
-      if (currentPiece.isRed) { loseLife(); redCaught++; }
+      if (currentPiece.isRed) {
+        loseLife();
+        redCaught++;
+        if (currentPiece.replacesType) {
+          const idx = pieceQueue.indexOf(currentPiece.replacesType);
+          if (idx !== -1) pieceQueue.splice(idx, 1);
+        }
+      }
       const offset = currentPiece.x - stecchinoX;
       const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
       use.setAttribute('href', '#' + currentPiece.type);
@@ -602,12 +611,7 @@ function update() {
   }
 
   if (!currentPiece && pieces.length > 0 && !pieces[pieces.length - 1].sliding) {
-    const normalLand = pieces.filter(p => !p.isRed).length;
-    if (normalLand >= 7 && pieceQueue.length === 0) {
-      winGame();
-    } else if (pieceQueue.length > 0 || redCaught < 3) {
-      spawnNextPiece();
-    }
+    spawnNextPiece();
   }
 
   render();
