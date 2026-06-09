@@ -535,32 +535,31 @@ function update() {
     const collisionY = Math.abs(currentPiece.y - 210) < 24;
 
     if (collisionX && collisionY) {
-      if (currentPiece.isRotten) {
-        loseLife();
-        if (fallingUse) { fallingUse.remove(); fallingUse = null; }
-        fallingMold.forEach(c => c.remove());
-        fallingMold = [];
-        currentPiece = null;
-        if (state !== STATE.WIN && pieceQueue.length > 0) spawnNextPiece();
-      } else {
-        const offset = currentPiece.x - stecchinoX;
-        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        use.setAttribute('href', '#' + currentPiece.type);
-        use.setAttribute('transform', 'translate(' + (STECCHINO_CENTER_X + offset) + ', ' + currentPiece.y + ')');
-        landedContainer.appendChild(use);
-        if (currentPiece.isRotten) createMold(STECCHINO_CENTER_X + offset, currentPiece.y, landedContainer, currentPiece);
-        currentPiece.sliding = true;
-        currentPiece.use = use;
-        currentPiece.offset = offset;
-        pieces.push(currentPiece);
-        currentPiece = null;
-        if (pieceQueue.length > 0) spawnNextPiece();
-      }
+      if (currentPiece.isRotten) loseLife();
+      const offset = currentPiece.x - stecchinoX;
+      const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+      use.setAttribute('href', '#' + currentPiece.type);
+      use.setAttribute('transform', 'translate(' + (STECCHINO_CENTER_X + offset) + ', ' + currentPiece.y + ')');
+      landedContainer.appendChild(use);
+      if (currentPiece.isRotten) createMold(STECCHINO_CENTER_X + offset, currentPiece.y, landedContainer, currentPiece);
+      currentPiece.sliding = true;
+      currentPiece.use = use;
+      currentPiece.offset = offset;
+      pieces.push(currentPiece);
+      currentPiece = null;
+      fallingMold.forEach(c => c.remove());
+      fallingMold = [];
+      if (pieceQueue.length > 0) spawnNextPiece();
     }
 
     if (currentPiece && currentPiece.y > GAME_AREA_BOTTOM) {
       currentPiece.y = SPAWN_Y;
       currentPiece.x = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
+      if (currentPiece.isRotten) {
+        currentPiece.isRotten = false;
+        fallingMold.forEach(c => c.remove());
+        fallingMold = [];
+      }
     }
   }
 
@@ -575,7 +574,7 @@ function update() {
   }
 
   if (!currentPiece && pieces.length > 0 && !pieces[pieces.length - 1].sliding) {
-    if (pieceQueue.length === 0) {
+    if (pieces.length === 7) {
       if (lives > 0) winGame();
     } else {
       spawnNextPiece();
