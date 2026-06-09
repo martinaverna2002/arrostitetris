@@ -286,6 +286,8 @@ function fillQueue() {
 
 function spawnNextPiece() {
   if (pieceQueue.length === 0) {
+    pieces = [];
+    landedContainer.innerHTML = '';
     fillQueue();
     landedCount = 0;
   }
@@ -304,7 +306,7 @@ spawnNextPiece();
 
 function update() {
   if (!isRunning) return;
-  if (!currentPiece) { requestAnimationFrame(update); return; }
+  if (!currentPiece) { render(); requestAnimationFrame(update); return; }
 
   currentPiece.y += FALL_SPEED;
 
@@ -335,14 +337,6 @@ function update() {
 function render() {
   const currentOffset = stecchinoX - STECCHINO_CENTER_X;
   movingGroup.setAttribute('transform', 'translate(' + currentOffset + ', 0)');
-
-  const uses = landedContainer.querySelectorAll('use');
-  for (let i = 0; i < uses.length; i++) {
-    const piece = pieces[i];
-    if (piece) {
-      uses[i].setAttribute('transform', 'translate(' + STECCHINO_CENTER_X + ', ' + piece.y + ')');
-    }
-  }
 
   if (currentPiece) {
     if (!fallingUse) {
