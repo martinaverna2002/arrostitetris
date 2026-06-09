@@ -254,8 +254,7 @@ const PIECE_LAND_Y = {
   't_pezzo_7': 292,
 };
 const FALL_SPEED = 4;
-const SLIDE_SPEED = 4;
-const ROUND_TIME = 170;
+const SLIDE_SPEED = 3;
 const GAME_AREA_LEFT = 51;
 const GAME_AREA_RIGHT = 344;
 const STECCHINO_CENTER_X = 197.5;
@@ -288,7 +287,6 @@ function spawnNextPiece() {
   if (pieceQueue.length === 0) {
     pieces = [];
     landedContainer.innerHTML = '';
-    roundTimer = 0;
     fillQueue();
   }
   const type = pieceQueue.pop();
@@ -304,12 +302,8 @@ function spawnNextPiece() {
 fillQueue();
 spawnNextPiece();
 
-let roundTimer = 0;
-
 function update() {
   if (!isRunning) return;
-
-  roundTimer++;
 
   if (currentPiece) {
     currentPiece.y += FALL_SPEED;
@@ -329,6 +323,11 @@ function update() {
       pieces.push(currentPiece);
       currentPiece = null;
     }
+
+    if (currentPiece && currentPiece.y > 570) {
+      currentPiece.y = SPAWN_Y;
+      currentPiece.x = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
+    }
   }
 
   for (const p of pieces) {
@@ -341,18 +340,8 @@ function update() {
     }
   }
 
-  if (roundTimer >= ROUND_TIME) {
-    if (fallingUse) { fallingUse.remove(); fallingUse = null; }
-    currentPiece = null;
-    for (const p of pieces) {
-      if (p.sliding) {
-        p.y = p.targetY;
-        p.sliding = false;
-        p.use.setAttribute('transform', 'translate(' + (STECCHINO_CENTER_X + (p.offset || 0)) + ', ' + p.y + ')');
-      }
-    }
+  if (!currentPiece && pieces.length > 0 && !pieces[pieces.length - 1].sliding) {
     spawnNextPiece();
-    roundTimer = 0;
   }
 
   render();
