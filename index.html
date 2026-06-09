@@ -254,7 +254,6 @@ const PIECE_LAND_Y = {
   't_pezzo_7': 292,
 };
 const FALL_SPEED = 2;
-const ATTRACTION_FORCE = 0.05;
 const GAME_AREA_LEFT = 51;
 const GAME_AREA_RIGHT = 344;
 const STECCHINO_CENTER_X = 197.5;
@@ -308,10 +307,10 @@ function update() {
 
   currentPiece.y += FALL_SPEED;
 
-  const dx = stecchinoX - currentPiece.x;
-  currentPiece.x += dx * ATTRACTION_FORCE;
+  const collisionX = Math.abs(currentPiece.x - stecchinoX) < 28;
+  const collisionY = currentPiece.y >= 200 && currentPiece.y <= 570;
 
-  if (currentPiece.y >= currentPiece.targetY) {
+  if (collisionX && collisionY) {
     currentPiece.y = currentPiece.targetY;
     currentPiece.x = stecchinoX;
     pieces.push({ ...currentPiece, landed: true });
@@ -324,6 +323,14 @@ function update() {
     currentPiece = null;
 
     setTimeout(spawnNextPiece, 500);
+    render();
+    requestAnimationFrame(update);
+    return;
+  }
+
+  if (currentPiece.y > 570) {
+    currentPiece.y = SPAWN_Y;
+    currentPiece.x = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
   }
 
   render();
