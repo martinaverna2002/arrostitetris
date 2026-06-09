@@ -19,6 +19,14 @@
     max-height: 98vh;
     cursor: none;
   }
+  #start-btn { cursor: pointer; }
+  #countdown {
+    font-family: Minecraft, Minecraft;
+    font-size: 72px;
+    fill: #e30613;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
 </style>
 </head>
 <body>
@@ -154,7 +162,7 @@
     <circle class="cls-3" cx="406.57" cy="650.46" r="12.24"/>
     <circle class="cls-3" cx="449.49" cy="650.46" r="12.24"/>
     <circle class="cls-3" cx="492.42" cy="650.46" r="12.24"/>
-    <circle class="cls-4" cx="428.03" cy="745.41" r="56.06"/>
+    <circle id="start-btn" class="cls-4" cx="428.03" cy="745.41" r="56.06"/>
     <circle class="cls-2" cx="173" cy="667.96" r="29.74"/>
     <circle class="cls-2" cx="120.36" cy="720.6" r="29.74"/>
     <circle class="cls-2" cx="224.13" cy="719.09" r="29.74"/>
@@ -169,6 +177,7 @@
     <text class="cls-8" transform="translate(532.55 537.6)"><tspan x="0" y="0">1</tspan></text>
   </g>
   <g id="game-area" clip-path="url(#white-rect-clip)">
+    <text id="countdown" x="197.5" y="311" visibility="hidden">3</text>
     <g id="moving-group">
       <g id="stecchino">
         <path class="cls-6" d="M197.62,559c-1.35-14.51-2.3-29.02-3.26-43.53.04-27.42.03-102.17.03-130.6,0-28.66,0-102.84,0-130.6.98-14.51,1.93-29.02,3.23-43.53,1.29,14.51,2.25,29.02,3.23,43.53,0,27.42,0,102.17,0,130.6,0,28.66,0,102.84.03,130.6-.96,14.51-1.91,29.02-3.26,43.53h0Z"/>
@@ -272,19 +281,29 @@ let pieces = [];
 let currentPiece = null;
 let pieceQueue = [];
 
-let isRunning = true;
+let isRunning = false;
+let gameActive = false;
 let fallingUse = null;
+let countdownInterval = null;
 
 const svg = document.querySelector('#Poster');
 const gameArea = document.getElementById('game-area');
 const movingGroup = document.getElementById('moving-group');
 const landedContainer = document.getElementById('landed-pieces');
+const startBtn = document.getElementById('start-btn');
+const countdownEl = document.getElementById('countdown');
+
+function renderSkewer() {
+  const currentOffset = stecchinoX - STECCHINO_CENTER_X;
+  movingGroup.setAttribute('transform', 'translate(' + currentOffset + ', 0)');
+}
 
 svg.addEventListener('mousemove', (e) => {
   const rect = svg.getBoundingClientRect();
   const scaleX = 595.28 / rect.width;
   const svgX = (e.clientX - rect.left) * scaleX;
   stecchinoX = Math.max(GAME_AREA_LEFT + 25, Math.min(GAME_AREA_RIGHT - 25, svgX));
+  renderSkewer();
 });
 
 function fillQueue() {
@@ -307,8 +326,46 @@ function spawnNextPiece() {
   };
 }
 
-fillQueue();
-spawnNextPiece();
+function resetGame() {
+  isRunning = false;
+  gameActive = false;
+  clearInterval(countdownInterval);
+  pieces = [];
+  currentPiece = null;
+  if (fallingUse) { fallingUse.remove(); fallingUse = null; }
+  pieceQueue = [];
+  landedContainer.innerHTML = '';
+  stecchinoX = STECCHINO_CENTER_X;
+  renderSkewer();
+  countdownEl.setAttribute('visibility', 'hidden');
+}
+
+function startCountdown() {
+  resetGame();
+  let count = 3;
+  countdownEl.textContent = count;
+  countdownEl.setAttribute('visibility', 'visible');
+  countdownInterval = setInterval(() => {
+    count--;
+    if (count === 0) {
+      clearInterval(countdownInterval);
+      countdownEl.setAttribute('visibility', 'hidden');
+      startGame();
+    } else {
+      countdownEl.textContent = count;
+    }
+  }, 1000);
+}
+
+function startGame() {
+  gameActive = true;
+  isRunning = true;
+  fillQueue();
+  spawnNextPiece();
+  update();
+}
+
+startBtn.addEventListener('click', startCountdown);
 
 function update() {
   if (!isRunning) return;
@@ -383,11 +440,9 @@ function render() {
 }
 
 document.addEventListener('visibilitychange', () => {
-  isRunning = !document.hidden;
+  isRunning = !document.hidden && gameActive;
   if (isRunning) update();
 });
-
-update();
 </script>
 </body>
 </html>
