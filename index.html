@@ -303,10 +303,10 @@ const SPAWN_Y = GAME_AREA_TOP;
 const CONFETTI_COLORS = ['#e30613', '#36a9e1', '#f9b233', '#e52b3a', '#1d71b8', '#683c11', '#7d4e24'];
 const ROTTEN_CHANCE = 0.25;
 const MOLD_SPOTS = [
-  { dx: -12, dy: -18, r: 4 }, { dx: 8, dy: -12, r: 3 },
-  { dx: -8, dy: 12, r: 5 },  { dx: 18, dy: 2, r: 3 },
-  { dx: -20, dy: 2, r: 4 },  { dx: 4, dy: -24, r: 3 },
-  { dx: -4, dy: 20, r: 3 },  { dx: 16, dy: -6, r: 4 },
+  { dx: -14, dy: -20, r: 6 }, { dx: 10, dy: -14, r: 5 },
+  { dx: -10, dy: 14, r: 7 },  { dx: 20, dy: 4, r: 5 },
+  { dx: -22, dy: 4, r: 6 },  { dx: 6, dy: -26, r: 5 },
+  { dx: -6, dy: 22, r: 5 },  { dx: 18, dy: -8, r: 6 },
 ];
 
 const STATE = { IDLE: 0, COUNTDOWN: 1, PLAYING: 2, PAUSED: 3, WIN: 4 };
@@ -439,6 +439,7 @@ function resetToIdle() {
 function winGame() {
   state = STATE.WIN;
   isRunning = false;
+  winText.textContent = 'YOU WIN';
   winText.setAttribute('visibility', 'visible');
   spawnConfetti();
   startTimeout = setTimeout(resetToIdle, 5000);
@@ -467,8 +468,8 @@ function createMold(x, y, parent, pieceObj) {
     c.setAttribute('cx', x + spot.dx);
     c.setAttribute('cy', y + spot.dy);
     c.setAttribute('r', spot.r);
-    c.setAttribute('fill', '#4a7c2e');
-    c.setAttribute('opacity', '0.85');
+      c.setAttribute('fill', '#e30613');
+      c.setAttribute('opacity', '0.9');
     parent.appendChild(c);
     pieceObj.moldEls.push(c);
   }
@@ -573,10 +574,12 @@ function update() {
     }
   }
 
-  if (pieces.length === 7 && !currentPiece && pieces.every(p => !p.sliding)) {
-    winGame();
-  } else if (!currentPiece && pieces.length > 0 && !pieces[pieces.length - 1].sliding) {
-    spawnNextPiece();
+  if (!currentPiece && pieces.length > 0 && !pieces[pieces.length - 1].sliding) {
+    if (pieceQueue.length === 0) {
+      if (lives > 0) winGame();
+    } else {
+      spawnNextPiece();
+    }
   }
 
   render();
