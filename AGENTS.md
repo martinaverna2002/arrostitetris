@@ -23,7 +23,7 @@ arrostitetris/
 - **No overlap**: each piece has a unique fixed targetY, so they never overlap on the skewer
 
 ### Impalement Flow
-1. Piece falls at `FALL_SPEED` (5)
+1. Piece falls at `FALL_SPEED` (3)
 2. Collision detected when near skewer tip (X diff < 28, Y near 210)
 3. Piece is added to `pieces[]` array, marked as `.sliding = true`
 4. Piece slides down at `SLIDE_SPEED` (4) toward its `targetY`
