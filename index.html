@@ -485,13 +485,13 @@ function resetToIdle() {
   state = STATE.IDLE;
 }
 
-function winGame() {
+function winGame(gameOverText) {
   state = STATE.WIN;
   isRunning = false;
-  winText.textContent = 'YOU WIN';
+  winText.textContent = gameOverText || 'YOU WIN';
   winText.setAttribute('visibility', 'visible');
-  spawnConfetti();
-  startTimeout = setTimeout(resetToIdle, 5000);
+  if (!gameOverText) spawnConfetti();
+  startTimeout = setTimeout(resetToIdle, gameOverText ? 3000 : 5000);
 }
 
 function spawnConfetti() {
