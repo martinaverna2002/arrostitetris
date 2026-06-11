@@ -477,7 +477,7 @@ function loseLife() {
     fallSpeed = FALL_SPEED;
     levelText.textContent = '1';
     speedText.textContent = '1';
-    winGame('GAME OVER', true);
+    winGame(null, true);
   }
 }
 
@@ -551,10 +551,15 @@ function resetToIdle() {
   state = STATE.IDLE;
 }
 
-function winGame(gameOverText, isGameOver) {
+function winGame(customText, isGameOver) {
   state = STATE.WIN;
   isRunning = false;
   if (isGameOver) {
+    if (fallingUse) {
+      fallingUse.remove();
+      fallingUse = null;
+    }
+    currentPiece = null;
     gameOverText.textContent = 'GAME OVER';
     gameOverText.setAttribute('visibility', 'visible');
     startTimeout = setTimeout(() => {
@@ -563,7 +568,7 @@ function winGame(gameOverText, isGameOver) {
     }, 3000);
     return;
   }
-  winText.textContent = gameOverText || 'LEVEL ' + level + ' COMPLETE!';
+  winText.textContent = customText || 'LEVEL ' + level + ' COMPLETE!';
   winText.setAttribute('visibility', 'visible');
   if (level < 10) {
     if (score > hiScore) {
