@@ -411,6 +411,7 @@ let startTimeout = null;
 let state = STATE.IDLE;
 let score = 0;
 let hiScore = 0;
+let musicStarted = false;
 
   let musicOsc = null;
   let musicBass = null;
@@ -579,9 +580,15 @@ function startCountdown() {
   countdownInterval = setInterval(() => {
     count--;
     if (count === 0) {
-      countdownEl.setAttribute('visibility', 'hidden');
-      clearInterval(countdownInterval);
-      startTimeout = setTimeout(startGame, 2000);
+      countdownEl.textContent = 'GO!';
+      startMusic();
+      setTimeout(() => {
+        countdownEl.setAttribute('visibility', 'hidden');
+        clearInterval(countdownInterval);
+        startTimeout = setTimeout(startGame, 500);
+      }, 800);
+    } else if (count < 0) {
+      // già gestito sopra
     } else {
       countdownEl.textContent = count;
     }
