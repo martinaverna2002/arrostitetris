@@ -412,6 +412,51 @@ let state = STATE.IDLE;
 let score = 0;
 let hiScore = 0;
 
+let musicOsc = null;
+let musicGain = null;
+let musicInterval = null;
+
+function startMusic() {
+  if (musicInterval) return;
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const melody = [
+    262, 262, 294, 262, 349, 330,
+    262, 262, 294, 262, 392, 349,
+    262, 262, 523, 440, 349, 330,
+    294, 466, 466, 440, 349, 392, 349
+  ];
+  let noteIdx = 0;
+  musicGain = ctx.createGain();
+  musicGain.connect(ctx.destination);
+  musicGain.gain.setValueAtTime(0.08, ctx.currentTime);
+  musicInterval = setInterval(() => {
+    if (musicOsc) { musicOsc.stop(); musicOsc = null; }
+    const freq = melody[noteIdx % melody.length];
+    musicOsc = ctx.createOscillator();
+    musicOsc.type = 'square';
+    musicOsc.frequency.setValueAtTime(freq, ctx.currentTime);
+    musicOsc.connect(musicGain);
+    musicOsc.start(ctx.currentTime);
+    musicOsc.stop(ctx.currentTime + 0.25);
+    noteIdx++;
+  }, 250);
+}
+
+function stopMusic() {
+  if (musicInterval) {
+    clearInterval(musicInterval);
+    musicInterval = null;
+  }
+  if (musicOsc) {
+    try { musicOsc.stop(); } catch (e) {}
+    musicOsc = null;
+  }
+  if (musicGain) {
+    try { musicGain.gain.setValueAtTime(0, musicGain.context.currentTime); } catch (e) {}
+    musicGain = null;
+  }
+}
+
 const svg = document.querySelector('#Poster');
 const gameArea = document.getElementById('game-area');
 const movingGroup = document.getElementById('moving-group');
@@ -539,12 +584,21 @@ function pauseGame() {
   state = STATE.PAUSED;
   isRunning = false;
   pauseIcon.setAttribute('visibility', 'visible');
+  if (musicOsc) {
+    try { musicOsc.disconnect(); } catch (e) {}
+  }
 }
 
 function resumeGame() {
   state = STATE.PLAYING;
   isRunning = true;
   pauseIcon.setAttribute('visibility', 'hidden');
+  if (musicGain) {
+    try {
+      const ctx = musicGain.context;
+      musicGain.connect(ctx.destination);
+    } catch (e) {}
+  }
   update();
 }
 
@@ -556,6 +610,7 @@ function resetToIdle() {
 function winGame(customText, isGameOver) {
   state = STATE.WIN;
   isRunning = false;
+  stopMusic();
   if (isGameOver) {
     if (fallingUse) {
       fallingUse.remove();
@@ -628,6 +683,7 @@ function startGame() {
   state = STATE.PLAYING;
   gameActive = true;
   isRunning = true;
+  startMusic();
   fillQueue();
   spawnNextPiece();
   update();
