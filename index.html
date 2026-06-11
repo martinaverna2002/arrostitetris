@@ -24,6 +24,12 @@
     font-weight: normal;
     font-style: normal;
   }
+  @font-face {
+    font-family: 'Minecraft';
+    src: url('asset/Minecraft.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
   #game-area { cursor: none; }
   #start-btn { cursor: pointer; }
   #countdown {
@@ -96,8 +102,16 @@
       }
 
       .cls-8, .cls-9, .cls-10 {
-        fill: #1d1d1b;
-      }
+    fill: #1d1d1b;
+  }
+  #game-over-text {
+    font-family: Minecraft, Minecraft;
+    font-size: 120px;
+    fill: #e30613;
+    text-anchor: middle;
+    dominant-baseline: central;
+    visibility: hidden;
+  }
 
       .cls-8, .cls-10 {
         font-family: Minecraft, Minecraft;
@@ -482,9 +496,9 @@ function resetGame(fullReset) {
     fallSpeed = FALL_SPEED;
     levelText.textContent = '1';
     speedText.textContent = '1';
+    lives = 3;
+    updateHearts();
   }
-  lives = 3;
-  updateHearts();
   if (fallingUse) { fallingUse.remove(); fallingUse = null; }
   pieceQueue = [];
   landedContainer.innerHTML = '';
