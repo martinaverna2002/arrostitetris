@@ -567,9 +567,7 @@ function startCountdown() {
     count--;
     if (count === 0) {
       countdownEl.textContent = 'GO!';
-      musicInterval = null;
-      musicStarted = false;
-      startMusic();
+      startMusic(); // parte la musica solo se non è già in corso
       setTimeout(() => {
         countdownEl.setAttribute('visibility', 'hidden');
         clearInterval(countdownInterval);
@@ -692,7 +690,6 @@ function startGame() {
   state = STATE.PLAYING;
   gameActive = true;
   isRunning = true;
-  startMusic();
   fillQueue();
   spawnNextPiece();
   update();
