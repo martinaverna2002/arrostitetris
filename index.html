@@ -396,8 +396,7 @@ let countdownInterval = null;
 let startTimeout = null;
 let state = STATE.IDLE;
 let score = 0;
-let hiScore = parseInt(localStorage.getItem('arrostitetris_hiscore')) || 0;
-hiScoreText.textContent = hiScore;
+let hiScore = 0;
 
 const svg = document.querySelector('#Poster');
 const gameArea = document.getElementById('game-area');
@@ -464,8 +463,6 @@ function loseLife() {
     fallSpeed = FALL_SPEED;
     levelText.textContent = '1';
     speedText.textContent = '1';
-    score = 0;
-    scoreText.textContent = '0';
     winGame('GAME OVER', true);
   }
 }
@@ -557,7 +554,6 @@ function winGame(gameOverText, isGameOver) {
   if (level < 10) {
     if (score > hiScore) {
       hiScore = score;
-      localStorage.setItem('arrostitetris_hiscore', hiScore);
       hiScoreText.textContent = hiScore;
     }
     spawnConfetti();
@@ -566,14 +562,13 @@ function winGame(gameOverText, isGameOver) {
       fallSpeed = FALL_SPEED + (level - 1);
       levelText.textContent = level;
       speedText.textContent = level;
-      resetGame(false);
+      resetGame();
       state = STATE.COUNTDOWN;
       startCountdown();
     }, 3000);
   } else {
     if (score > hiScore) {
       hiScore = score;
-      localStorage.setItem('arrostitetris_hiscore', hiScore);
       hiScoreText.textContent = hiScore;
     }
     spawnConfetti();
