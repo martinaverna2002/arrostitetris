@@ -422,64 +422,54 @@ let hiScore = 0;
     if (musicInterval) return;
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const melody = [
-      392, 440, 392, 349, 330, 294, 262, 294,
-      330, 349, 330, 294, 262, 247, 262, 294,
-      330, 349, 392, 440, 392, 349, 330, 294
-    ];
-    const bassLine = [
-      130, 130, 165, 130, 196, 165,
-      130, 130, 165, 130, 220, 196,
-      130, 130, 262, 220, 196, 165,
-      147, 233, 233, 220, 196, 165, 147
+      { n: 659, d: 0.15 }, { n: 659, d: 0.15 }, { n: 0, d: 0.15 }, { n: 659, d: 0.15 },
+      { n: 0, d: 0.15 }, { n: 523, d: 0.15 }, { n: 659, d: 0.15 }, { n: 0, d: 0.15 },
+      { n: 784, d: 0.15 }, { n: 0, d: 0.45 }, { n: 392, d: 0.15 }, { n: 0, d: 0.45 },
+      { n: 523, d: 0.15 }, { n: 0, d: 0.30 }, { n: 392, d: 0.15 }, { n: 0, d: 0.30 },
+      { n: 330, d: 0.15 }, { n: 0, d: 0.30 }, { n: 440, d: 0.15 }, { n: 0, d: 0.30 },
+      { n: 494, d: 0.15 }, { n: 0, d: 0.15 }, { n: 466, d: 0.15 }, { n: 0, d: 0.15 },
+      { n: 440, d: 0.15 }, { n: 0, d: 0.30 }, { n: 392, d: 0.15 }, { n: 659, d: 0.15 },
+      { n: 784, d: 0.15 }, { n: 880, d: 0.15 }, { n: 0, d: 0.15 }, { n: 698, d: 0.15 },
+      { n: 784, d: 0.15 }, { n: 0, d: 0.15 }, { n: 659, d: 0.15 }, { n: 0, d: 0.15 },
+      { n: 523, d: 0.15 }, { n: 587, d: 0.15 }, { n: 494, d: 0.15 }
     ];
     let noteIdx = 0;
     musicGain = ctx.createGain();
     musicGain.connect(ctx.destination);
     musicGain.gain.setValueAtTime(0.06, ctx.currentTime);
-    musicBassGain = ctx.createGain();
-    musicBassGain.connect(ctx.destination);
-    musicBassGain.gain.setValueAtTime(0.07, ctx.currentTime);
-    musicInterval = setInterval(() => {
-      if (musicOsc) { musicOsc.stop(); musicOsc = null; }
-      if (musicBass) { musicBass.stop(); musicBass = null; }
-      const freq = melody[noteIdx % melody.length];
-      const bassFreq = bassLine[noteIdx % bassLine.length];
-      musicOsc = ctx.createOscillator();
-      musicOsc.type = 'triangle';
-      musicOsc.frequency.setValueAtTime(freq, ctx.currentTime);
-      musicOsc.connect(musicGain);
-      musicOsc.start(ctx.currentTime);
-      musicOsc.stop(ctx.currentTime + 0.25);
-      musicBass = ctx.createOscillator();
-      musicBass.type = 'sine';
-      musicBass.frequency.setValueAtTime(bassFreq, ctx.currentTime);
-      musicBass.connect(musicBassGain);
-      musicBass.start(ctx.currentTime);
-      musicBass.stop(ctx.currentTime + 0.25);
+    let currentTime = ctx.currentTime;
+    function playNextNote() {
+      if (!musicInterval) return;
+      const note = melody[noteIdx % melody.length];
+      if (note.n > 0) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(note.n, currentTime);
+        gain.gain.setValueAtTime(0.08, currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, currentTime + note.d * 0.8);
+        osc.connect(gain);
+        gain.connect(musicGain);
+        osc.start(currentTime);
+        osc.stop(currentTime + note.d);
+      }
+      currentTime += note.d;
       noteIdx++;
-    }, 250);
+      const nextNote = melody[noteIdx % melody.length];
+      const waitTime = nextNote ? nextNote.d * 1000 : 250;
+      musicInterval = setTimeout(playNextNote, waitTime);
+    }
+    playNextNote();
   }
 
   function stopMusic() {
     if (musicInterval) {
-      clearInterval(musicInterval);
+      clearTimeout(musicInterval);
       musicInterval = null;
-    }
-    if (musicOsc) {
-      try { musicOsc.stop(); } catch (e) {}
-      musicOsc = null;
-    }
-    if (musicBass) {
-      try { musicBass.stop(); } catch (e) {}
-      musicBass = null;
     }
     if (musicGain) {
       try { musicGain.gain.setValueAtTime(0, musicGain.context.currentTime); } catch (e) {}
       musicGain = null;
-    }
-    if (musicBassGain) {
-      try { musicBassGain.gain.setValueAtTime(0, musicBassGain.context.currentTime); } catch (e) {}
-      musicBassGain = null;
     }
   }
 
