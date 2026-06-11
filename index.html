@@ -430,7 +430,7 @@ let hiScore = 0;
     let noteIdx = 0;
     const musicGain = ctx.createGain();
     musicGain.connect(ctx.destination);
-    musicGain.gain.setValueAtTime(0.15, ctx.currentTime);
+    musicGain.gain.setValueAtTime(0.4, ctx.currentTime);
     function playNextNote() {
       const note = melody[noteIdx % melody.length];
       if (note.n > 0) {
@@ -438,7 +438,7 @@ let hiScore = 0;
         const noteGain = ctx.createGain();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(note.n, ctx.currentTime);
-        noteGain.gain.setValueAtTime(0.2, ctx.currentTime);
+        noteGain.gain.setValueAtTime(0.5, ctx.currentTime);
         noteGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + note.d / 1000 * 0.8);
         osc.connect(noteGain);
         noteGain.connect(musicGain);
