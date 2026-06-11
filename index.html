@@ -681,6 +681,10 @@ function update() {
         currentPiece.y = SPAWN_Y;
         currentPiece.x = GAME_AREA_LEFT + 25 + Math.random() * (GAME_AREA_RIGHT - GAME_AREA_LEFT - 50);
       } else {
+        if (fallingUse) {
+          fallingUse.remove();
+          fallingUse = null;
+        }
         currentPiece = null;
       }
     }
