@@ -423,40 +423,35 @@ let musicStarted = false;
     if (musicInterval) return;
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const melody = [
-      { n: 659, d: 0.30 }, { n: 784, d: 0.30 }, { n: 880, d: 0.30 }, { n: 0, d: 0.30 },
-      { n: 659, d: 0.30 }, { n: 784, d: 0.30 }, { n: 880, d: 0.30 }, { n: 0, d: 0.30 },
-      { n: 659, d: 0.15 }, { n: 784, d: 0.15 }, { n: 880, d: 0.30 }, { n: 1047, d: 0.30 },
-      { n: 880, d: 0.30 }, { n: 784, d: 0.30 }, { n: 659, d: 0.30 }, { n: 0, d: 0.30 },
-      { n: 523, d: 0.30 }, { n: 587, d: 0.30 }, { n: 659, d: 0.30 }, { n: 0, d: 0.30 },
-      { n: 523, d: 0.30 }, { n: 587, d: 0.30 }, { n: 659, d: 0.30 }, { n: 0, d: 0.30 },
-      { n: 523, d: 0.15 }, { n: 587, d: 0.15 }, { n: 659, d: 0.30 }, { n: 784, d: 0.30 },
-      { n: 659, d: 0.30 }, { n: 587, d: 0.30 }, { n: 523, d: 0.30 }, { n: 0, d: 0.30 }
+      { n: 523, d: 200 }, { n: 587, d: 200 }, { n: 659, d: 200 }, { n: 698, d: 200 },
+      { n: 784, d: 200 }, { n: 880, d: 200 }, { n: 784, d: 200 }, { n: 698, d: 200 },
+      { n: 659, d: 200 }, { n: 587, d: 200 }, { n: 523, d: 400 }, { n: 0, d: 200 },
+      { n: 659, d: 200 }, { n: 698, d: 200 }, { n: 784, d: 200 }, { n: 880, d: 200 },
+      { n: 1047, d: 400 }, { n: 0, d: 200 }, { n: 784, d: 200 }, { n: 880, d: 200 },
+      { n: 784, d: 200 }, { n: 698, d: 200 }, { n: 659, d: 200 }, { n: 587, d: 200 },
+      { n: 523, d: 400 }, { n: 0, d: 400 }
     ];
     let noteIdx = 0;
     musicGain = ctx.createGain();
     musicGain.connect(ctx.destination);
-    musicGain.gain.setValueAtTime(0.06, ctx.currentTime);
-    let currentTime = ctx.currentTime;
+    musicGain.gain.setValueAtTime(0.15, ctx.currentTime);
     function playNextNote() {
       if (!musicInterval) return;
       const note = melody[noteIdx % melody.length];
       if (note.n > 0) {
         const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(note.n, currentTime);
-        gain.gain.setValueAtTime(0.08, currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, currentTime + note.d * 0.8);
-        osc.connect(gain);
-        gain.connect(musicGain);
-        osc.start(currentTime);
-        osc.stop(currentTime + note.d);
+        const noteGain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(note.n, ctx.currentTime);
+        noteGain.gain.setValueAtTime(0.2, ctx.currentTime);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + note.d / 1000 * 0.8);
+        osc.connect(noteGain);
+        noteGain.connect(musicGain);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + note.d / 1000);
       }
-      currentTime += note.d;
       noteIdx++;
-      const nextNote = melody[noteIdx % melody.length];
-      const waitTime = nextNote ? nextNote.d * 1000 : 250;
-      musicInterval = setTimeout(playNextNote, waitTime);
+      musicInterval = setTimeout(playNextNote, note.d);
     }
     playNextNote();
   }
