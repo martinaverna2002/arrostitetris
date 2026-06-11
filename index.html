@@ -412,50 +412,76 @@ let state = STATE.IDLE;
 let score = 0;
 let hiScore = 0;
 
-let musicOsc = null;
-let musicGain = null;
-let musicInterval = null;
+  let musicOsc = null;
+  let musicBass = null;
+  let musicGain = null;
+  let musicBassGain = null;
+  let musicInterval = null;
 
-function startMusic() {
-  if (musicInterval) return;
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const melody = [
-    262, 262, 294, 262, 349, 330,
-    262, 262, 294, 262, 392, 349,
-    262, 262, 523, 440, 349, 330,
-    294, 466, 466, 440, 349, 392, 349
-  ];
-  let noteIdx = 0;
-  musicGain = ctx.createGain();
-  musicGain.connect(ctx.destination);
-  musicGain.gain.setValueAtTime(0.08, ctx.currentTime);
-  musicInterval = setInterval(() => {
-    if (musicOsc) { musicOsc.stop(); musicOsc = null; }
-    const freq = melody[noteIdx % melody.length];
-    musicOsc = ctx.createOscillator();
-    musicOsc.type = 'square';
-    musicOsc.frequency.setValueAtTime(freq, ctx.currentTime);
-    musicOsc.connect(musicGain);
-    musicOsc.start(ctx.currentTime);
-    musicOsc.stop(ctx.currentTime + 0.25);
-    noteIdx++;
-  }, 250);
-}
+  function startMusic() {
+    if (musicInterval) return;
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const melody = [
+      392, 440, 392, 349, 330, 294, 262, 294,
+      330, 349, 330, 294, 262, 247, 262, 294,
+      330, 349, 392, 440, 392, 349, 330, 294
+    ];
+    const bassLine = [
+      130, 130, 165, 130, 196, 165,
+      130, 130, 165, 130, 220, 196,
+      130, 130, 262, 220, 196, 165,
+      147, 233, 233, 220, 196, 165, 147
+    ];
+    let noteIdx = 0;
+    musicGain = ctx.createGain();
+    musicGain.connect(ctx.destination);
+    musicGain.gain.setValueAtTime(0.03, ctx.currentTime);
+    musicBassGain = ctx.createGain();
+    musicBassGain.connect(ctx.destination);
+    musicBassGain.gain.setValueAtTime(0.04, ctx.currentTime);
+    musicInterval = setInterval(() => {
+      if (musicOsc) { musicOsc.stop(); musicOsc = null; }
+      if (musicBass) { musicBass.stop(); musicBass = null; }
+      const freq = melody[noteIdx % melody.length];
+      const bassFreq = bassLine[noteIdx % bassLine.length];
+      musicOsc = ctx.createOscillator();
+      musicOsc.type = 'triangle';
+      musicOsc.frequency.setValueAtTime(freq, ctx.currentTime);
+      musicOsc.connect(musicGain);
+      musicOsc.start(ctx.currentTime);
+      musicOsc.stop(ctx.currentTime + 0.25);
+      musicBass = ctx.createOscillator();
+      musicBass.type = 'sine';
+      musicBass.frequency.setValueAtTime(bassFreq, ctx.currentTime);
+      musicBass.connect(musicBassGain);
+      musicBass.start(ctx.currentTime);
+      musicBass.stop(ctx.currentTime + 0.25);
+      noteIdx++;
+    }, 250);
+  }
 
-function stopMusic() {
-  if (musicInterval) {
-    clearInterval(musicInterval);
-    musicInterval = null;
+  function stopMusic() {
+    if (musicInterval) {
+      clearInterval(musicInterval);
+      musicInterval = null;
+    }
+    if (musicOsc) {
+      try { musicOsc.stop(); } catch (e) {}
+      musicOsc = null;
+    }
+    if (musicBass) {
+      try { musicBass.stop(); } catch (e) {}
+      musicBass = null;
+    }
+    if (musicGain) {
+      try { musicGain.gain.setValueAtTime(0, musicGain.context.currentTime); } catch (e) {}
+      musicGain = null;
+    }
+    if (musicBassGain) {
+      try { musicBassGain.gain.setValueAtTime(0, musicBassGain.context.currentTime); } catch (e) {}
+      musicBassGain = null;
+    }
   }
-  if (musicOsc) {
-    try { musicOsc.stop(); } catch (e) {}
-    musicOsc = null;
-  }
-  if (musicGain) {
-    try { musicGain.gain.setValueAtTime(0, musicGain.context.currentTime); } catch (e) {}
-    musicGain = null;
-  }
-}
 
 const svg = document.querySelector('#Poster');
 const gameArea = document.getElementById('game-area');
