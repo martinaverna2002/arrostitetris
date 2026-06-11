@@ -435,10 +435,10 @@ let hiScore = 0;
     let noteIdx = 0;
     musicGain = ctx.createGain();
     musicGain.connect(ctx.destination);
-    musicGain.gain.setValueAtTime(0.03, ctx.currentTime);
+    musicGain.gain.setValueAtTime(0.06, ctx.currentTime);
     musicBassGain = ctx.createGain();
     musicBassGain.connect(ctx.destination);
-    musicBassGain.gain.setValueAtTime(0.04, ctx.currentTime);
+    musicBassGain.gain.setValueAtTime(0.07, ctx.currentTime);
     musicInterval = setInterval(() => {
       if (musicOsc) { musicOsc.stop(); musicOsc = null; }
       if (musicBass) { musicBass.stop(); musicBass = null; }
