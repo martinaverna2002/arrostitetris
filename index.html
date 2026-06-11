@@ -411,17 +411,11 @@ let startTimeout = null;
 let state = STATE.IDLE;
 let score = 0;
 let hiScore = 0;
-let musicStarted = false;
 
-  let musicOsc = null;
-  let musicBass = null;
-  let musicGain = null;
-  let musicBassGain = null;
   let musicInterval = null;
 
   function startMusic() {
-    if (musicStarted) return;
-    musicStarted = true;
+    if (musicInterval) return; // già in riproduzione
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') { ctx.resume(); }
     const melody = [
@@ -434,11 +428,10 @@ let musicStarted = false;
       { n: 523, d: 400 }, { n: 0, d: 400 }
     ];
     let noteIdx = 0;
-    musicGain = ctx.createGain();
+    const musicGain = ctx.createGain();
     musicGain.connect(ctx.destination);
     musicGain.gain.setValueAtTime(0.15, ctx.currentTime);
     function playNextNote() {
-      if (!musicInterval) return;
       const note = melody[noteIdx % melody.length];
       if (note.n > 0) {
         const osc = ctx.createOscillator();
@@ -462,10 +455,6 @@ let musicStarted = false;
     if (musicInterval) {
       clearTimeout(musicInterval);
       musicInterval = null;
-    }
-    if (musicGain) {
-      try { musicGain.gain.setValueAtTime(0, musicGain.context.currentTime); } catch (e) {}
-      musicGain = null;
     }
   }
 
