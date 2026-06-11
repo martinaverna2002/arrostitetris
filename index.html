@@ -420,8 +420,10 @@ let musicStarted = false;
   let musicInterval = null;
 
   function startMusic() {
-    if (musicInterval) return;
+    if (musicStarted) return;
+    musicStarted = true;
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') { ctx.resume(); }
     const melody = [
       { n: 523, d: 200 }, { n: 587, d: 200 }, { n: 659, d: 200 }, { n: 698, d: 200 },
       { n: 784, d: 200 }, { n: 880, d: 200 }, { n: 784, d: 200 }, { n: 698, d: 200 },
@@ -576,6 +578,8 @@ function startCountdown() {
     count--;
     if (count === 0) {
       countdownEl.textContent = 'GO!';
+      musicInterval = null;
+      musicStarted = false;
       startMusic();
       setTimeout(() => {
         countdownEl.setAttribute('visibility', 'hidden');
