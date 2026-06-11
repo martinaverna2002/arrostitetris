@@ -610,8 +610,8 @@ function resetToIdle() {
 function winGame(customText, isGameOver) {
   state = STATE.WIN;
   isRunning = false;
-  stopMusic();
   if (isGameOver) {
+    stopMusic();
     if (fallingUse) {
       fallingUse.remove();
       fallingUse = null;
