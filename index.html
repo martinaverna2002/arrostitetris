@@ -294,8 +294,8 @@
       <rect x="205" y="260" width="15" height="102"/>
     </g>
     <text id="win-text" x="197.5" y="311">YOU WIN</text>
-    <text id="game-over-game" x="197.5" y="275" visibility="hidden">GAME</text>
-    <text id="game-over-over" x="197.5" y="365" visibility="hidden">OVER</text>
+    <text id="game-over-game" x="197.5" y="270" visibility="hidden">GAME</text>
+    <text id="game-over-over" x="197.5" y="380" visibility="hidden">OVER</text>
     <g id="confetti-container"></g>
   </g>
   <g id="cuore_3">
@@ -568,7 +568,7 @@ function winGame(customText, isGameOver) {
       gameOverGame.setAttribute('visibility', 'hidden');
       gameOverOver.setAttribute('visibility', 'hidden');
       resetToIdle();
-    }, 3000);
+    }, 4000);
     return;
   }
   winText.textContent = customText || 'LEVEL ' + level + ' COMPLETE!';
@@ -744,18 +744,19 @@ function render() {
 
 function playGameOverSound() {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(200, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 1.0);
-  gain.gain.setValueAtTime(0.3, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.0);
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 1.0);
+  const notes = [440, 415, 392, 370, 349, 330, 311, 294, 277, 262, 247, 220];
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.08);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.08 + 0.1);
+    osc.start(ctx.currentTime + i * 0.08);
+    osc.stop(ctx.currentTime + i * 0.08 + 0.1);
+  });
 }
 
 function playSound() {
