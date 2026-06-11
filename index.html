@@ -684,6 +684,7 @@ function update() {
       scoreText.textContent = score;
       scoreText.style.fill = '#e30613';
       setTimeout(() => { scoreText.style.fill = '#1d1d1b'; }, 500);
+      playFailSound();
       loseLife();
       if (lives > 0) {
         currentPiece.y = SPAWN_Y;
@@ -757,6 +758,21 @@ function playGameOverSound() {
     osc.start(ctx.currentTime + i * 0.08);
     osc.stop(ctx.currentTime + i * 0.08 + 0.1);
   });
+}
+
+function playFailSound() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(300, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.3);
+  gain.gain.setValueAtTime(0.2, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.3);
 }
 
 function playSound() {
